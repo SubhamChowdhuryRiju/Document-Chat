@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 
-st.title("AI Titens")
+st.title("AI Titans")
 st.subheader("Chat with your documents")
 
 template = """
