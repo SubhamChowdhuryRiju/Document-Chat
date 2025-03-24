@@ -11,7 +11,7 @@ from langchain.embeddings import HuggingFaceEmbeddings
 load_dotenv()
 
 st.set_page_config(
-    page_title="AI Titens",
+    page_title="AI Titans",
     page_icon="🤖",
 )
 
