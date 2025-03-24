@@ -11,5 +11,4 @@ requests
 lxml
 aiohttp
 asyncio
-PyPDF2
 pdfplumber

@@ -1,11 +1,14 @@
 import streamlit as st
-
+from dotenv import load_dotenv
+import os
 from langchain_community.document_loaders import PDFPlumberLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.embeddings import HuggingFaceEmbeddings
+
+load_dotenv()
 
 st.set_page_config(
     page_title="AI Titens",
@@ -29,7 +32,7 @@ pdfs_directory = '.github/'
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 vector_store = InMemoryVectorStore(embeddings)
 
-model = ChatGroq(groq_api_key="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", model_name="llama-3.3-70b-versatile", temperature=0)
+model = ChatGroq(groq_api_key=os.environ.get('GROQ_API_KEY'), model_name="llama-3.3-70b-versatile", temperature=0)
 
 def upload_pdf(file):
     file_path = pdfs_directory + file.name
@@ -72,11 +75,16 @@ def answer_question(question, documents):
 if "conversation_history" not in st.session_state:
     st.session_state.conversation_history = []
 
-uploaded_file = st.file_uploader(
-    "Upload PDF",
-    type="pdf",
-    accept_multiple_files=True
-)
+
+if st.checkbox("Do you want to upload an additional PDF?"):
+    uploaded_file = st.file_uploader(
+        "Upload Additional PDF",
+        type="pdf",
+        accept_multiple_files=False
+    )
+else:
+    uploaded_file = None
+
 
 if uploaded_file:
     all_documents = []
@@ -90,23 +98,23 @@ if uploaded_file:
     # Index all documents after processing
     index_docs(all_documents)
 
-    question = st.chat_input("Ask a question:")
+question = st.chat_input("Ask a question:")
 
-    if question:
-        st.session_state.conversation_history.append({"role": "user", "content": question})
-        
-        # Retrieve relevant documents
-        related_documents = retrieve_docs(question)
-        
-        # Get the answer from the assistant
-        answer = answer_question(question, related_documents)
-        
-        # Save the assistant's response to the conversation history
-        st.session_state.conversation_history.append({"role": "assistant", "content": answer})
+if question:
+    st.session_state.conversation_history.append({"role": "user", "content": question})
+    
+    # Retrieve relevant documents
+    related_documents = retrieve_docs(question)
+    
+    # Get the answer from the assistant
+    answer = answer_question(question, related_documents)
+    
+    # Save the assistant's response to the conversation history
+    st.session_state.conversation_history.append({"role": "assistant", "content": answer})
 
-    # Display the conversation history
-    for message in st.session_state.conversation_history:
-        if message["role"] == "user":
-            st.chat_message("user").write(message["content"])
-        elif message["role"] == "assistant":
-            st.chat_message("assistant").write(message["content"])
+# Display the conversation history
+for message in st.session_state.conversation_history:
+    if message["role"] == "user":
+        st.chat_message("user").write(message["content"])
+    elif message["role"] == "assistant":
+        st.chat_message("assistant").write(message["content"])
